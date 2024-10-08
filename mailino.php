@@ -26,3 +26,13 @@ define('MILIN_ASSETS' , MILIN_URL.'/assets');
 if (!function_exists('is_plugin_active')) {
     include_once(ABSPATH . 'wp-admin/includes/plugin.php');
 }
+
+include_once MILIN_INC . '/core.class.php';
+include_once MILIN_INC . '/ajax.class.php';
+include_once MILIN_INC . '/mail.class.php';
+include_once MILIN_INC . '/widget.class.php';
+include_once MILIN_INC . '/visual.class.php';
+
+new Mailino();
+new Mailino_AJAX_Handler();
+new Mailino_EMAIL_Handler();
