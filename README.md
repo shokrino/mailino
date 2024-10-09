@@ -2,7 +2,7 @@
 
 ## Description
 
-**Mailino** is a reasy-to-use WordPress plugin designed to manage email subscriptions efficiently. Whether you want to collect emails for your newsletter or simply grow your audience, Mailino provides a seamless way to add a stylish email subscription form to your website. It also includes advanced features like customized form styles, a CSV export option for subscriber data, and real-time email validation.
+**Mailino** is a easy-to-use WordPress plugin designed to manage email subscriptions efficiently. Whether you want to collect emails for your newsletter or simply grow your audience, Mailino provides a seamless way to add a stylish email subscription form to your website. It also includes advanced features like customized form styles, a CSV export option for subscriber data, and real-time email validation.
 
 ✨ **Features**  
 - **Customizable Subscription Form**: Easily adjust the form's main color, border radius, and size to match your website's branding.
