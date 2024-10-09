@@ -1,0 +1,184 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Mailino\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-10-09 14:29+0000\n"
+"PO-Revision-Date: 2024-10-09 14:38+0000\n"
+"Last-Translator: USER1093\n"
+"Language-Team: فارسی\n"
+"Language: fa_IR\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.11; wp-6.6.1\n"
+"X-Domain: mailino"
+
+#: inc/mail.class.php:9
+#, php-format
+msgid "A new subscriber has joined: %s"
+msgstr "یک عضو جدید برای خبرنامه داریم: %s"
+
+#: inc/core.class.php:133
+msgid "Border Radius"
+msgstr "گرد بودن گوشه ها"
+
+#: inc/core.class.php:57
+msgid "Dashboard"
+msgstr "داشبورد"
+
+#: inc/core.class.php:320
+msgid "day"
+msgstr "روز"
+
+#: inc/core.class.php:92
+msgid "Delete"
+msgstr "حذف"
+
+#: inc/ajax.class.php:15
+msgid "Email is required."
+msgstr "ایمیل ضروری است."
+
+#: inc/core.class.php:80
+msgid "Email Subscribers List"
+msgstr "لیست اعضای خبرنامه"
+
+#: inc/core.class.php:58
+msgid "Emails List"
+msgstr "لیست ایمیل ها"
+
+#: inc/core.class.php:269
+msgid "Enter your email"
+msgstr "ایمیل خود را وارد کنید"
+
+#: inc/core.class.php:101
+msgid "Export to CSV"
+msgstr "خروجی اکسل"
+
+#: inc/core.class.php:69
+msgid "Form Customization Settings"
+msgstr "شخصی سازی فرم"
+
+#: inc/core.class.php:141
+msgid "Form Size"
+msgstr "اندازه فرم"
+
+#: inc/core.class.php:118
+msgid "Form Style Settings"
+msgstr "تنظیمات استایل فرم"
+
+#: inc/core.class.php:321
+msgid "hour"
+msgstr "ساعت"
+
+#. Author URI of the plugin
+msgid "https://shokrino.com"
+msgstr "https://shokrino.com"
+
+#. URI of the plugin
+msgid "https://shokrino.com/mailino"
+msgstr "https://shokrino.com/mailino"
+
+#: inc/core.class.php:164
+msgid "Large (61px height)"
+msgstr "بزرگ (ارتفاع 61px)"
+
+#. Name of the plugin
+#: inc/core.class.php:20
+msgid "Mailino"
+msgstr "مِیلینو"
+
+#: inc/core.class.php:53
+msgid "Mailino - Email Subscribers"
+msgstr "مِیلینو - اعضای ایمیل"
+
+#: inc/core.class.php:19
+msgid "Mailino Subscribers"
+msgstr "اعضای مِیلینو"
+
+#: inc/core.class.php:125
+msgid "Main Color"
+msgstr "رنگ اصلی"
+
+#: inc/core.class.php:163
+msgid "Medium (54px height)"
+msgstr "متوسط (ارتفاع ۵۴px)"
+
+#: inc/core.class.php:322
+msgid "minute"
+msgstr "دقیقه"
+
+#: inc/core.class.php:318
+msgid "month"
+msgstr "ماه"
+
+#: inc/mail.class.php:8
+msgid "New Subscription"
+msgstr "عضویت جدید"
+
+#: inc/core.class.php:96
+msgid "No subscribers found."
+msgstr "هیچ عضوی پیدا نشد."
+
+#: inc/ajax.class.php:24
+msgid "Please use a valid email provider like Gmail, Yahoo, or Outlook."
+msgstr "لطفا یک ایمیل که برای Gmail، Yahoo یاOutlook باشد وارد کنید."
+
+#: inc/core.class.php:323
+msgid "second"
+msgstr "ثانیه"
+
+#. Author of the plugin
+msgid "Shokrino Team"
+msgstr "تیم شکرینو"
+
+#: inc/core.class.php:162
+msgid "Small (47px height)"
+msgstr "کوچک (ارتفاع ۴۷px)"
+
+#: inc/core.class.php:271
+msgid "Subscribe"
+msgstr "ثبت ایمیل"
+
+#: inc/core.class.php:63
+msgid "Subscribe Form"
+msgstr "فرم ثبت ایمیل"
+
+#: inc/mail.class.php:17
+msgid "Thank you for subscribing to our mailing list!"
+msgstr "از عضویت شما در سیستم خبرنامه ایمیلی متشکریم!"
+
+#: inc/mail.class.php:16
+msgid "Thank You for Subscribing!"
+msgstr "از شما بابت ثبت ایمیل ممنونیم!"
+
+#: inc/ajax.class.php:53
+msgid "Thank you for subscribing!"
+msgstr "از شما بابت ثبت ایمیل ممنونیم!"
+
+#. Description of the plugin
+msgid "The most useful email subscription list plugin"
+msgstr "بهترین افزونه برای ثبت لیست ایمیل کاربران سایت برای خبرنامه"
+
+#: inc/ajax.class.php:55
+msgid "There was a problem. Please try again."
+msgstr "یک مشکل بوجود آمد. لطفا مجددا تلاش کنید."
+
+#: inc/ajax.class.php:34
+msgid "This email is already subscribed."
+msgstr "این ایمیل قبلا ثبت شده است."
+
+#: inc/core.class.php:319
+msgid "week"
+msgstr "هفته"
+
+#: inc/core.class.php:317
+msgid "year"
+msgstr "سال"
+
+#: inc/core.class.php:64
+msgid "You can use the following shortcode to display the subscribe form:"
+msgstr ""
+"میتوانید از شورتکد زیر در تمامی بخش های وردپرس استفاده نمایید تا فرم ایمیل "
+"جایگزین آن شود."

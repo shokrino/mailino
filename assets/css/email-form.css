@@ -4,6 +4,7 @@
     justify-content: center;
     align-items: center;
     width: 100%;
+    background: #fff;
     border: 1px solid #dcdcdc;
     overflow: hidden;
     --color-mailino-plugin: #70ce1e;
@@ -17,9 +18,11 @@
     padding: var(--padding-mailino-plugin);
     font-size: calc(var(--padding-mailino-plugin) + 1px);
     display: flex;
-    background: #fff;
+    background: transparent !important;
     justify-content: center;
     align-items: center;
+    box-shadow: none !important;
+    border: none !important;
 }
 #mailino-email-form button {
     display: flex;
@@ -32,6 +35,8 @@
     background: var(--color-mailino-plugin);
     color: #fff;
     font-weight: bold;
+    box-shadow: none !important;
+    border: none !important;
 }
 #mailino-email-form:focus-within {
     border: 1px solid var(--color-mailino-plugin);
@@ -77,4 +82,25 @@
     100% {
         opacity: 0;
     }
+}
+/* Admin Styles */
+.mailino-settings-box button.button.wp-color-result {
+    color: #fff;
+    border-color: transparent;
+    border-radius: 9px;
+    padding: 5px 20px;
+    box-shadow: none;
+}
+.shortcode-box-mailino {
+    font-size: 22px;
+    background: #fff;
+    padding: 20px 35px;
+    margin-bottom: 15px;
+    display: flex;
+    width: fit-content;
+    border-radius: 10px;
+}
+.toplevel_page_mailino_email_subscribers #mailino-email-form {
+    width: 450px;
+    max-width: 100%;
 }
