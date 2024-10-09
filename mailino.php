@@ -5,7 +5,7 @@ Plugin Name: Mailino
 Plugin URI: https://shokrino.com/mailino
 Description: The most useful email subscription list plugin
 Author: Shokrino Team
-Version: 0.0.1
+Version: 1.0.0
 Author URI: https://shokrino.com
 Textdomain: mailino
 */

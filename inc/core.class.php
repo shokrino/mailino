@@ -27,14 +27,16 @@ if (!class_exists('Mailino')) {
         }
 
         public function enqueue_email_subscription_script() {
-            wp_enqueue_style('style-mailino', MILIN_ASSETS.'/css/email-form.css', array(), MILIN_VERSION, 'all', false);
-            if (!is_admin()) {
-                wp_enqueue_script('ajax-script-mailino', MILIN_ASSETS . '/js/email-form.js', array(), null, true);
-                wp_localize_script('ajax-script-mailino', 'mailino_script_data', array(
-                    'ajax_url' => admin_url('admin-ajax.php'),
-                ));
-            } else {
-                wp_enqueue_script('mailino-admin-color-picker', MILIN_ASSETS . '/js/admin-form.js' , ['wp-color-picker', 'jquery'], false, true);
+            if (has_shortcode(get_post()->post_content, 'mailino_form') || is_admin()) {
+                wp_enqueue_style('style-mailino', MILIN_ASSETS . '/css/email-form.css', array(), MILIN_VERSION, 'all', false);
+                if (!is_admin()) {
+                    wp_enqueue_script('ajax-script-mailino', MILIN_ASSETS . '/js/email-form.js', array(), null, true);
+                    wp_localize_script('ajax-script-mailino', 'mailino_script_data', array(
+                        'ajax_url' => admin_url('admin-ajax.php'),
+                    ));
+                } else {
+                    wp_enqueue_script('mailino-admin-color-picker', MILIN_ASSETS . '/js/admin-form.js', ['wp-color-picker', 'jquery'], false, true);
+                }
             }
         }
         public function display_email_subscribers_page() {
@@ -48,23 +50,19 @@ if (!class_exists('Mailino')) {
                 exit;
             }
 
-            // Tabbed Navigation
             echo '<div class="wrap">';
             echo '<h1>' . esc_html__('Mailino - Email Subscribers', 'mailino') . '</h1>';
 
-            // Tab navigation
             echo '<h2 class="nav-tab-wrapper">';
             echo '<a href="#dashboard" class="nav-tab nav-tab-active">' . esc_html__('Dashboard', 'mailino') . '</a>';
             echo '<a href="#emails-list" class="nav-tab">' . esc_html__('Emails List', 'mailino') . '</a>';
             echo '</h2>';
 
-            // Dashboard tab
             echo '<div id="dashboard" class="tab-content" style="display: block;">';
             echo '<h2>' . esc_html__('Subscribe Form', 'mailino') . '</h2>';
             echo '<p>' . esc_html__('You can use the following shortcode to display the subscribe form:', 'mailino') . '</p>';
             echo '<span class="shortcode-box-mailino">[mailino_form]</span>';
 
-            // Settings section for form customization
             echo '<div class="mailino-settings-box" style="margin-top: 20px;">';
             echo '<h2>' . esc_html__('Form Customization Settings', 'mailino') . '</h2>';
             echo do_shortcode('[mailino_form]');
@@ -74,9 +72,8 @@ if (!class_exists('Mailino')) {
             submit_button();
             echo '</form>';
             echo '</div>';
-            echo '</div>'; // Close dashboard tab
+            echo '</div>';
 
-            // Emails List tab
             echo '<div id="emails-list" class="tab-content" style="display: none;">';
             echo '<h2>' . esc_html__('Email Subscribers List', 'mailino') . '</h2>';
             echo '<table class="widefat fixed" cellspacing="0">';
@@ -101,7 +98,7 @@ if (!class_exists('Mailino')) {
             echo '<form method="post" action="">';
             echo '<input type="submit" name="export_csv" class="button-primary" value="' . esc_html__('Export to CSV', 'mailino') . '">';
             echo '</form>';
-            echo '</div>'; // Close emails-list tab
+            echo '</div>';
 
             if (isset($_POST['export_csv'])) {
                 $this->export_subscribers_to_csv();
