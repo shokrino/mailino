@@ -10,6 +10,7 @@ if (!class_exists('Mailino_AJAX_Handler')) {
         }
 
         public function enqueue_email_subscription_script() {
+            wp_enqueue_style('style-mailino', MILIN_ASSETS.'/css/email-form.css', array(), MILIN_VERSION, 'all', false);
             wp_enqueue_script('ajax-script-mailino', MILIN_ASSETS . '/js/email-form.js', array(), null, true);
             wp_localize_script('ajax-script-mailino', 'mailino_script_data', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
@@ -17,32 +18,56 @@ if (!class_exists('Mailino_AJAX_Handler')) {
         }
 
         function save_email_subscription() {
-            // Verify nonce
-            if (!isset($_POST['email_nonce']) || !wp_verify_nonce($_POST['email_nonce'], 'mailino_subscribe_nonce')) {
-                wp_send_json_error(['error' => __('Nonce verification failed.', 'mailino')]);
-                wp_die();
-            }
-        
-            // Check if email is set
+            check_ajax_referer('mailino_subscribe_nonce', 'email_nonce');
+
             if (!isset($_POST['email'])) {
                 wp_send_json_error(['error' => __('Email is required.', 'mailino')]);
                 wp_die();
             }
-        
+
             $email = sanitize_email($_POST['email']);
             $allowedProviders = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
             $emailDomain = explode('@', $email)[1] ?? '';
-        
-            // Validate email domain
+
             if (!in_array($emailDomain, $allowedProviders)) {
                 wp_send_json_error(['error' => __('Please use a valid email provider like Gmail, Yahoo, or Outlook.', 'mailino')]);
                 wp_die();
             }
-        
-            // Add your email handling logic here, e.g., saving to the database.
-        
-            wp_send_json_success(['message' => __('Successfully subscribed!', 'mailino')]);
+
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'mailino_subscribers';
+
+            $existing_subscriber = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE email = %s", $email));
+
+            if ($existing_subscriber) {
+                wp_send_json_error(['message' => __('This email is already subscribed.', 'mailino')]);
+                wp_die();
+            } else {
+                $result = $wpdb->insert(
+                    $table_name,
+                    [
+                        'email' => $email,
+                        'time_added' => current_time('mysql'),
+                    ],
+                    [
+                        '%s',
+                        '%s',
+                    ]
+                );
+
+                if ($result) {
+                    $email_handler = new Mailino_EMAIL_Handler();
+                    $email_handler->send_email_to_owner($email);
+                    $email_handler->send_email_to_subscriber($email);
+                    wp_send_json_success(['message' => __('Thank you for subscribing!', 'mailino')]);
+                } else {
+                    wp_send_json_error(['message' => __('There was a problem. Please try again.', 'mailino')]);
+                }
+            }
+
             wp_die();
         }
+
+
     }
 }

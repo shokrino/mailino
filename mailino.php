@@ -35,4 +35,3 @@ include_once MILIN_INC . '/visual.class.php';
 
 new Mailino();
 new Mailino_AJAX_Handler();
-new Mailino_EMAIL_Handler();

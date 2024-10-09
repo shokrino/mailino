@@ -1,0 +1,80 @@
+#mailino-email-form {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    border: 1px solid #dcdcdc;
+    overflow: hidden;
+    --color-mailino-plugin: #70ce1e;
+    --border-radius-mailino-plugin: 14px;
+    --padding-mailino-plugin: 14px;
+    border-radius: var(--border-radius-mailino-plugin);
+}
+#mailino-email-form input {
+    width: 100%;
+    flex: 1;
+    padding: var(--padding-mailino-plugin);
+    font-size: calc(var(--padding-mailino-plugin) + 1px);
+    display: flex;
+    background: #fff;
+    justify-content: center;
+    align-items: center;
+}
+#mailino-email-form button {
+    display: flex;
+    padding: calc(var(--padding-mailino-plugin) - 3px) calc(var(--padding-mailino-plugin) + 2px);
+    height: 100%;
+    border-radius: calc(var(--border-radius-mailino-plugin) - 5px);
+    font-size: calc(var(--padding-mailino-plugin) - 1px);
+    margin: 5px;
+    cursor: pointer;
+    background: var(--color-mailino-plugin);
+    color: #fff;
+    font-weight: bold;
+}
+#mailino-email-form:focus-within {
+    border: 1px solid var(--color-mailino-plugin);
+}
+#mailino-email-form .loading-email-subs {
+    position: absolute;
+    background: #0000006b;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: progress;
+    border-radius: var(--border-radius-mailino-plugin);
+}
+#mailino-email-form input:-webkit-autofill {
+    -webkit-text-fill-color: inherit;
+    background: inherit;
+}
+.response-email-subs {
+    position: absolute;
+    background: #ebffe2;
+    color: #277504;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--border-radius-mailino-plugin);
+    opacity: 0;
+    animation: fadeInOutMailino 5s forwards;
+}
+@keyframes fadeInOutMailino {
+    0% {
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}

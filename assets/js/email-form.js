@@ -1,53 +1,84 @@
 document.addEventListener('DOMContentLoaded', function() {
     const mailinoForm = document.querySelector('#mailino-email-form');
-    const responseDiv = document.getElementById('mailino-response');
+    const responseDiv = mailinoForm.querySelector('.response-email-subs');
     const loadingIndicator = mailinoForm.querySelector('.loading-email-subs');
+    const emailInput = mailinoForm.querySelector('#email');
+
+    emailInput.addEventListener('input', function() {
+        emailInput.value = convertPersianNumbersMailino(emailInput.value);
+    });
 
     mailinoForm.addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent the default form submission
+        e.preventDefault();
 
-        // Get the email input value
-        const emailInput = document.getElementById('email');
         const email = emailInput.value;
         const allowedProviders = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
         const emailDomain = email.split('@').pop();
 
-        // Check for valid email providers
         if (!allowedProviders.includes(emailDomain)) {
             alert('Please use a valid email provider like Gmail, Yahoo, or Outlook.');
-            return; // Exit the function if the email is not valid
+            return;
         }
 
-        loadingIndicator.style.display = 'block'; // Show loading spinner
-
+        loadingIndicator.style.display = 'flex';
+        responseDiv.style.display = 'none';
         const formData = new FormData(mailinoForm);
-        formData.append('action', 'save_email_mailino'); // Set the action
+        formData.append('action', 'save_email_mailino');
 
-        // Perform the AJAX request
         fetch(mailino_script_data.ajax_url, {
-            method: 'POST', // Ensure it's POST
+            method: 'POST',
             body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest' // Set custom header
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => {
-            loadingIndicator.style.display = 'none'; // Hide loading spinner
-            return response.json(); // Parse JSON response
-        })
-        .then(data => {
-            if (data.success) {
-                responseDiv.textContent = data.message; // Display success message
-                responseDiv.style.color = 'green'; // Set text color to green
-            } else {
-                responseDiv.textContent = data.error; // Display error message
-                responseDiv.style.color = 'red'; // Set text color to red
-            }
-        })
-        .catch(error => {
-            loadingIndicator.style.display = 'none'; // Hide loading spinner on error
-            responseDiv.textContent = 'An error occurred.'; // General error message
-        });
-    });
-});
+            .then(response => response.json())
+            .then(data => {
+                loadingIndicator.style.display = 'none';
+                responseDiv.style.display = 'flex';
 
+                if (data.success) {
+                    responseDiv.innerHTML = data.data.message;
+                    emailInput.value = "";
+                    responseDiv.style.backgroundColor = '#d4edda';
+                    responseDiv.style.color = '#155724';
+                } else {
+                    responseDiv.innerHTML = data.data.message || 'An unexpected error occurred.';
+                    responseDiv.style.backgroundColor = '#ffe2e2';
+                    responseDiv.style.color = '#750404';
+                }
+
+                setTimeout(() => {
+                    responseDiv.style.display = 'none';
+                }, 5000);
+            })
+            .catch(() => {
+                loadingIndicator.style.display = 'none';
+                responseDiv.innerHTML = 'An error occurred while processing your request.';
+                responseDiv.style.display = 'flex';
+                responseDiv.style.backgroundColor = '#750404';
+                responseDiv.style.color = '#ffe2e2';
+
+                setTimeout(() => {
+                    responseDiv.style.display = 'none';
+                }, 5000);
+            });
+    });
+
+    function convertPersianNumbersMailino(input) {
+        const persianToEnglishNumbers = {
+            '۰': '0',
+            '۱': '1',
+            '۲': '2',
+            '۳': '3',
+            '۴': '4',
+            '۵': '5',
+            '۶': '6',
+            '۷': '7',
+            '۸': '8',
+            '۹': '9'
+        };
+
+        return input.replace(/[۰-۹]/g, match => persianToEnglishNumbers[match]);
+    }
+});

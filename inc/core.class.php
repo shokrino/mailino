@@ -11,8 +11,8 @@ if (!class_exists('Mailino')) {
 
         public function register_email_subscribers_menu_page() {
             add_menu_page(
-                esc_html__('Email Subscribers', 'mailino'),
-                esc_html__('Email Subscribers', 'mailino'),
+                esc_html__('Mailino Subscribers', 'mailino'),
+                esc_html__('Mailino', 'mailino'),
                 'manage_options',
                 'email-subscribers',
                 [$this, 'display_email_subscribers_page'],
@@ -26,18 +26,30 @@ if (!class_exists('Mailino')) {
             $table_name = $wpdb->prefix . 'mailino_subscribers';
             $subscribers = $wpdb->get_results("SELECT * FROM $table_name");
 
+            if (isset($_GET['delete_subscriber'])) {
+                $this->delete_subscriber($_GET['delete_subscriber']);
+                wp_redirect(admin_url('admin.php?page=email-subscribers'));
+                exit;
+            }
+
             echo '<div class="wrap">';
             echo '<h1>' . esc_html__('Email Subscribers', 'mailino') . '</h1>';
             echo '<table class="widefat fixed" cellspacing="0">';
-            echo '<thead><tr><th>ID</th><th>Email</th></tr></thead>';
+            echo '<thead><tr><th>ID</th><th>Email</th><th>Time Added</th><th>Action</th></tr></thead>';
             echo '<tbody>';
 
             if ($subscribers) {
                 foreach ($subscribers as $subscriber) {
-                    echo '<tr><td>' . esc_html($subscriber->id) . '</td><td>' . esc_html($subscriber->email) . '</td></tr>';
+                    $time_added = $this->time_elapsed_string($subscriber->time_added); // Convert to "X time ago"
+                    echo '<tr>';
+                    echo '<td>' . esc_html($subscriber->id) . '</td>';
+                    echo '<td>' . esc_html($subscriber->email) . '</td>';
+                    echo '<td>' . esc_html($time_added) . '</td>';
+                    echo '<td><a href="' . admin_url('admin.php?page=email-subscribers&delete_subscriber=' . $subscriber->id) . '" class="button button-secondary" onclick="return confirm(\'Are you sure you want to delete this subscriber?\');">' . esc_html__('Delete', 'mailino') . '</a></td>';
+                    echo '</tr>';
                 }
             } else {
-                echo '<tr><td colspan="2">' . esc_html__('No subscribers found.', 'mailino') . '</td></tr>';
+                echo '<tr><td colspan="4">' . esc_html__('No subscribers found.', 'mailino') . '</td></tr>';
             }
 
             echo '</tbody></table></br>';
@@ -49,6 +61,12 @@ if (!class_exists('Mailino')) {
             if (isset($_POST['export_csv'])) {
                 $this->export_subscribers_to_csv();
             }
+        }
+
+        private function delete_subscriber($id) {
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'mailino_subscribers';
+            $wpdb->delete($table_name, ['id' => $id]);
         }
 
         public function export_subscribers_to_csv() {
@@ -68,14 +86,19 @@ if (!class_exists('Mailino')) {
 
                 $output = fopen('php://output', 'w');
 
+                fputcsv($output, ['ID', 'Email', 'Time Added']);
+
                 foreach ($subscribers as $subscriber) {
-                    fputcsv($output, [$subscriber->email]);
+                    fputcsv($output, [$subscriber->id, $subscriber->email, $subscriber->time_added]);
                 }
 
                 fclose($output);
                 exit;
+            } else {
+                exit('No subscribers found.');
             }
         }
+
 
         public function create_email_subscriber_table() {
             global $wpdb;
@@ -85,12 +108,31 @@ if (!class_exists('Mailino')) {
             $sql = "CREATE TABLE IF NOT EXISTS $table_name (
                 id mediumint(9) NOT NULL AUTO_INCREMENT,
                 email varchar(255) NOT NULL,
+                time_added datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
                 PRIMARY KEY (id),
                 UNIQUE KEY email (email)
             ) $charset_collate;";
 
             require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
             dbDelta($sql);
+            
+            $this->sync_table_structure($table_name);
+        }
+
+        private function sync_table_structure($table_name) {
+            global $wpdb;
+            $columns = $wpdb->get_results("SHOW COLUMNS FROM $table_name", ARRAY_A);
+            $required_columns = [
+                'id' => 'mediumint(9)',
+                'email' => 'varchar(255)',
+                'time_added' => 'datetime DEFAULT CURRENT_TIMESTAMP'
+            ];
+
+            foreach ($required_columns as $column => $definition) {
+                if (!array_key_exists($column, array_column($columns, 'Field', 'Field'))) {
+                    $wpdb->query("ALTER TABLE $table_name ADD $column $definition");
+                }
+            }
         }
 
         public function register_shortcodes() {
@@ -101,7 +143,6 @@ if (!class_exists('Mailino')) {
             ob_start();
             ?>
             <form id="mailino-email-form" method="post">
-                <label for="email"><?php esc_html_e('Subscribe to our mailing list:', 'mailino'); ?></label>
                 <input type="email" name="email" id="email" required placeholder="<?php esc_attr_e('Enter your email', 'mailino'); ?>">
                 <input type="hidden" name="email_nonce" value="<?php echo wp_create_nonce('mailino_subscribe_nonce'); ?>">
                 <button type="submit"><?php esc_html_e('Subscribe', 'mailino'); ?></button>
@@ -135,12 +176,43 @@ if (!class_exists('Mailino')) {
                         <circle class="spinner_nOfF spinner_MSNs" cx="4" cy="12" r="3"></circle>
                     </svg>
                 </span>
+                <span id="mailino-response" class="response-email-subs" style="display: none;"></span>
             </form>
-            <div id="mailino-response" class="response" style="display: none;"></div>
             <?php
             return ob_get_clean();
         }
 
-    }
+        public function time_elapsed_string($datetime, $full = false) {
+            $now = new DateTime;
+            $ago = new DateTime($datetime);
+            $diff = $now->diff($ago);
 
+            $diff->w = floor($diff->d / 7);
+            $diff->d -= $diff->w * 7;
+
+            $string = [
+                'y' => __('year', 'mailino'),
+                'm' => __('month', 'mailino'),
+                'w' => __('week', 'mailino'),
+                'd' => __('day', 'mailino'),
+                'h' => __('hour', 'mailino'),
+                'i' => __('minute', 'mailino'),
+                's' => __('second', 'mailino'),
+            ];
+
+            foreach ($string as $k => &$v) {
+                if ($diff->$k) {
+                    $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+                } else {
+                    unset($string[$k]);
+                }
+            }
+
+            $formattedDateTime = $ago->format('F j - H:i');
+
+            if (!$full) $string = array_slice($string, 0, 1);
+            return $formattedDateTime;
+        }
+
+    }
 }
