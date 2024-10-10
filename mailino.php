@@ -6,6 +6,8 @@ Plugin URI: https://shokrino.com/mailino
 Description: The most useful email subscription list plugin
 Author: Shokrino Team
 Version: 1.0.0
+License: GPL-2.0-or-later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Author URI: https://shokrino.com
 Textdomain: mailino
 */
@@ -38,7 +40,7 @@ function mailino_settings_link( $links ) {
         'mailino_email_subscribers',
         get_admin_url() . 'admin.php'
     ) );
-    $settings_link = "<a href='$url'>" . __( 'Settings' ) . '</a>';
+    $settings_link = "<a href='$url'>" . __( 'Settings' , 'mailino') . '</a>';
     array_push(
         $links,
         $settings_link

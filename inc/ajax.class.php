@@ -16,7 +16,7 @@ if (!class_exists('Mailino_AJAX_Handler')) {
                 wp_die();
             }
 
-            $email = sanitize_email($_POST['email']);
+            $email = sanitize_email(wp_unslash($_POST['email']));
             $allowedProviders = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
             $emailDomain = explode('@', $email)[1] ?? '';
 
@@ -27,10 +27,26 @@ if (!class_exists('Mailino_AJAX_Handler')) {
 
             global $wpdb;
             $table_name = $wpdb->prefix . 'mailino_subscribers';
+            if ($table_name !== $wpdb->prefix . 'mailino_subscribers') {
+                wp_send_json_error(['error' => __('Invalid table name', 'mailino')]);
+                wp_die();
+            }
 
-            $existing_subscriber = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE email = %s", $email));
+            $cache_key = 'mailino_subscriber_' . md5($email);
+            $existing_subscriber = wp_cache_get($cache_key, 'mailino_cache');
 
-            if ($existing_subscriber) {
+            if ($existing_subscriber === false) {
+                $prepared_query = $wpdb->prepare(
+                    "SELECT * FROM {$table_name} WHERE email = %s",
+                    $email
+                );
+
+                $existing_subscriber = $wpdb->get_results($prepared_query);
+
+                wp_cache_set($cache_key, $existing_subscriber, 'mailino_cache', 3600);
+            }
+
+            if (!empty($existing_subscriber)) {
                 wp_send_json_error(['message' => __('This email is already subscribed.', 'mailino')]);
                 wp_die();
             } else {
@@ -58,7 +74,5 @@ if (!class_exists('Mailino_AJAX_Handler')) {
 
             wp_die();
         }
-
-
     }
 }

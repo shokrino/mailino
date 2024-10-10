@@ -11,6 +11,7 @@ if (!class_exists('Mailino')) {
             add_action('wp_head', [$this, 'apply_custom_styles']);
             add_action('admin_head', [$this, 'apply_custom_styles']);
             add_action('wp_enqueue_scripts', [$this, 'enqueue_email_subscription_script']);
+            add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_email_subscription_script']);
             add_action('admin_enqueue_scripts', [$this, 'enqueue_email_subscription_script']);
         }
 
@@ -27,37 +28,51 @@ if (!class_exists('Mailino')) {
         }
 
         public function enqueue_email_subscription_script() {
-            if (has_shortcode(get_post()->post_content, 'mailino_form') || is_admin()) {
-                wp_enqueue_style('style-mailino', MILIN_ASSETS . '/css/email-form.css', array(), MILIN_VERSION, 'all', false);
-                if (!is_admin()) {
-                    wp_enqueue_script('ajax-script-mailino', MILIN_ASSETS . '/js/email-form.js', array(), null, true);
-                    wp_localize_script('ajax-script-mailino', 'mailino_script_data', array(
-                        'ajax_url' => admin_url('admin-ajax.php'),
-                    ));
-                } else {
-                    wp_enqueue_script('mailino-admin-color-picker', MILIN_ASSETS . '/js/admin-form.js', ['wp-color-picker', 'jquery'], false, true);
-                }
+            if (!is_admin() && has_shortcode(get_post()->post_content, 'mailino_form')) {
+                wp_enqueue_style('style-mailino', MILIN_ASSETS . '/css/email-form.css', array(), MILIN_VERSION, 'all');
+                wp_enqueue_script('ajax-script-mailino', MILIN_ASSETS . '/js/email-form.js', array(), MILIN_VERSION, true);
+                wp_localize_script('ajax-script-mailino', 'mailino_script_data', array(
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                ));
+            }
+
+            if (is_admin() && isset($_GET['page']) && $_GET['page'] === 'mailino_email_subscribers') {
+                wp_enqueue_style('style-mailino', MILIN_ASSETS . '/css/email-form.css', array(), MILIN_VERSION, 'all');
+                wp_enqueue_script('mailino-admin-color-picker', MILIN_ASSETS . '/js/admin-form.js', ['wp-color-picker', 'jquery'], MILIN_VERSION, true);
             }
         }
+
+        public function enqueue_admin_email_subscription_script() {
+            wp_enqueue_script('mailino-admin-color-picker', MILIN_ASSETS . '/js/admin-form.js', ['wp-color-picker', 'jquery'], MILIN_VERSION, true);
+
+            add_filter('script_loader_tag', function($tag, $handle) {
+                if ('mailino-admin-color-picker' !== $handle) {
+                    return $tag;
+                }
+                return str_replace(' src', ' defer src', $tag);
+            }, 10, 2);
+        }
+
+
         public function display_email_subscribers_page() {
             global $wpdb;
             $table_name = $wpdb->prefix . 'mailino_subscribers';
-            $subscribers = $wpdb->get_results("SELECT * FROM $table_name");
+            $subscribers = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM %s", $table_name ) );
 
             if (isset($_GET['delete_subscriber'])) {
-                $this->delete_subscriber($_GET['delete_subscriber']);
+                $this->delete_subscriber(sanitize_text_field( wp_unslash( $_GET['delete_subscriber'] ) ));
                 wp_redirect(admin_url('admin.php?page=mailino_email_subscribers'));
                 exit;
             }
 
             echo '<div class="wrap">';
             echo '<h1>' . esc_html__('Mailino - Email Subscribers', 'mailino') . '</h1>';
-
             echo '<h2 class="nav-tab-wrapper">';
             echo '<a href="#dashboard" class="nav-tab nav-tab-active">' . esc_html__('Dashboard', 'mailino') . '</a>';
             echo '<a href="#emails-list" class="nav-tab">' . esc_html__('Emails List', 'mailino') . '</a>';
             echo '</h2>';
 
+            // Dashboard Section
             echo '<div id="dashboard" class="tab-content" style="display: block;">';
             echo '<h2>' . esc_html__('Subscribe Form', 'mailino') . '</h2>';
             echo '<p>' . esc_html__('You can use the following shortcode to display the subscribe form:', 'mailino') . '</p>';
@@ -74,6 +89,7 @@ if (!class_exists('Mailino')) {
             echo '</div>';
             echo '</div>';
 
+            // Emails List Section
             echo '<div id="emails-list" class="tab-content" style="display: none;">';
             echo '<h2>' . esc_html__('Email Subscribers List', 'mailino') . '</h2>';
             echo '<table class="widefat fixed" cellspacing="0">';
@@ -87,7 +103,7 @@ if (!class_exists('Mailino')) {
                     echo '<td>' . esc_html($subscriber->id) . '</td>';
                     echo '<td>' . esc_html($subscriber->email) . '</td>';
                     echo '<td>' . esc_html($time_added) . '</td>';
-                    echo '<td><a href="' . admin_url('admin.php?page=mailino_email_subscribers&delete_subscriber=' . $subscriber->id) . '" class="button button-secondary" onclick="return confirm(\'Are you sure you want to delete this subscriber?\');">' . esc_html__('Delete', 'mailino') . '</a></td>';
+                    echo '<td><a href="' . esc_url(admin_url('admin.php?page=mailino_email_subscribers&delete_subscriber=' . $subscriber->id)) . '" class="button button-secondary" onclick="return confirm(\'Are you sure you want to delete this subscriber?\');">' . esc_html__('Delete', 'mailino') . '</a></td>';
                     echo '</tr>';
                 }
             } else {
@@ -106,6 +122,7 @@ if (!class_exists('Mailino')) {
 
             echo '</div>';
         }
+
         public function register_mailino_settings() {
             register_setting('mailino_settings_group', 'mailino_main_color');
             register_setting('mailino_settings_group', 'mailino_border_radius');
@@ -175,13 +192,13 @@ if (!class_exists('Mailino')) {
             $form_size = get_option('mailino_form_size', 'medium');
             $font_size = $form_size === 'small' ? '12px' : ($form_size === 'large' ? '16px' : '14px');
 
-            echo "<style>
+            echo '<style>
                 #mailino-email-form {
-                    --color-mailino-plugin: {$main_color};
-                    --border-radius-mailino-plugin: {$border_radius}px;
-                    --padding-mailino-plugin: {$font_size};
+                    --color-mailino-plugin: ' . esc_attr($main_color) . ';
+                    --border-radius-mailino-plugin: ' . esc_attr($border_radius) . 'px;
+                    --padding-mailino-plugin: ' . esc_attr($font_size) . ';
                 }
-            </style>";
+            </style>';
         }
 
         private function delete_subscriber($id) {
@@ -199,75 +216,85 @@ if (!class_exists('Mailino')) {
             $table_name = $wpdb->prefix . 'mailino_subscribers';
             $subscribers = $wpdb->get_results("SELECT * FROM $table_name");
 
-            if ($subscribers) {
-                header('Content-Type: text/csv; charset=utf-8');
-                header('Content-Disposition: attachment; filename="mailino_subscribers.csv"');
-                header('Pragma: no-cache');
-                header('Expires: 0');
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment;filename="subscribers.csv"');
+            $output = fopen('php://output', 'w');
+            fputcsv($output, ['ID', 'Email', 'Time Added']);
 
-                $output = fopen('php://output', 'w');
-
-                fputcsv($output, ['ID', 'Email', 'Time Added']);
-
-                foreach ($subscribers as $subscriber) {
-                    fputcsv($output, [$subscriber->id, $subscriber->email, $subscriber->time_added]);
-                }
-
-                fclose($output);
-                exit;
-            } else {
-                exit('No subscribers found.');
+            foreach ($subscribers as $subscriber) {
+                fputcsv($output, [$subscriber->id, $subscriber->email, $subscriber->time_added]);
             }
+
+            global $wp_filesystem;
+            if ( ! $wp_filesystem ) {
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+                WP_Filesystem();
+            }
+            $wp_filesystem->delete($output);
+
+            exit();
         }
 
+        private function time_elapsed_string($datetime, $full = false) {
+            $now = new DateTime;
+            $ago = new DateTime($datetime);
+            $diff = $now->diff($ago);
+
+            $diff->w = floor($diff->d / 7);
+            $diff->d -= $diff->w * 7;
+
+            $string = [
+                'y' => 'year',
+                'm' => 'month',
+                'w' => 'week',
+                'd' => 'day',
+                'h' => 'hour',
+                'i' => 'minute',
+                's' => 'second',
+            ];
+            foreach ($string as $k => &$v) {
+                if ($diff->$k) {
+                    $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
+                } else {
+                    unset($string[$k]);
+                }
+            }
+
+            if (!$full) {
+                $string = array_slice($string, 0, 1);
+            }
+
+            return $string ? implode(', ', $string) . ' ago' : 'just now';
+        }
 
         public function create_email_subscriber_table() {
             global $wpdb;
-            $table_name = $wpdb->prefix . 'mailino_subscribers';
             $charset_collate = $wpdb->get_charset_collate();
+            $table_name = $wpdb->prefix . 'mailino_subscribers';
 
             $sql = "CREATE TABLE IF NOT EXISTS $table_name (
                 id mediumint(9) NOT NULL AUTO_INCREMENT,
-                email varchar(255) NOT NULL,
+                email varchar(100) NOT NULL,
                 time_added datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                PRIMARY KEY (id),
-                UNIQUE KEY email (email)
+                UNIQUE (email),
+                PRIMARY KEY  (id)
             ) $charset_collate;";
 
             require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
             dbDelta($sql);
-            
-            $this->sync_table_structure($table_name);
-        }
-
-        private function sync_table_structure($table_name) {
-            global $wpdb;
-            $columns = $wpdb->get_results("SHOW COLUMNS FROM $table_name", ARRAY_A);
-            $required_columns = [
-                'id' => 'mediumint(9)',
-                'email' => 'varchar(255)',
-                'time_added' => 'datetime DEFAULT CURRENT_TIMESTAMP'
-            ];
-
-            foreach ($required_columns as $column => $definition) {
-                if (!array_key_exists($column, array_column($columns, 'Field', 'Field'))) {
-                    $wpdb->query("ALTER TABLE $table_name ADD $column $definition");
-                }
-            }
         }
 
         public function register_shortcodes() {
-            add_shortcode('mailino_form', [$this, 'render_email_form']);
+            add_shortcode('mailino_form', [$this, 'render_email_subscription_form']);
         }
 
-        public function render_email_form() {
-            ob_start();
+        public function render_email_subscription_form() {
             ?>
-            <form id="mailino-email-form" method="post">
-                <input type="email" name="email" id="email" required placeholder="<?php esc_attr_e('Enter your email', 'mailino'); ?>">
-                <input type="hidden" name="email_nonce" value="<?php echo wp_create_nonce('mailino_subscribe_nonce'); ?>">
-                <button type="submit"><?php esc_html_e('Subscribe', 'mailino'); ?></button>
-                <span class="loading-email-subs" style="display:none;">
+<form id="mailino-email-form" method="post">
+    <input type="email" name="email" id="email" required placeholder="<?php esc_attr_e('Enter your email', 'mailino'); ?>">
+    <input type="hidden" name="email_nonce" value="<?php echo esc_attr(wp_create_nonce('mailino_subscribe_nonce')); ?>">
+    <button type="submit"><?php esc_html_e('Subscribe', 'mailino'); ?></button>
+    <span class="loading-email-subs" style="display:none;">
                     <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <style>
                             .spinner_nOfF {
@@ -297,43 +324,9 @@ if (!class_exists('Mailino')) {
                         <circle class="spinner_nOfF spinner_MSNs" cx="4" cy="12" r="3"></circle>
                     </svg>
                 </span>
-                <span id="mailino-response" class="response-email-subs" style="display: none;"></span>
-            </form>
-            <?php
-            return ob_get_clean();
+    <span id="mailino-response" class="response-email-subs" style="display: none;"></span>
+</form>
+<?php
         }
-
-        public function time_elapsed_string($datetime, $full = false) {
-            $now = new DateTime;
-            $ago = new DateTime($datetime);
-            $diff = $now->diff($ago);
-
-            $diff->w = floor($diff->d / 7);
-            $diff->d -= $diff->w * 7;
-
-            $string = [
-                'y' => __('year', 'mailino'),
-                'm' => __('month', 'mailino'),
-                'w' => __('week', 'mailino'),
-                'd' => __('day', 'mailino'),
-                'h' => __('hour', 'mailino'),
-                'i' => __('minute', 'mailino'),
-                's' => __('second', 'mailino'),
-            ];
-
-            foreach ($string as $k => &$v) {
-                if ($diff->$k) {
-                    $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
-                } else {
-                    unset($string[$k]);
-                }
-            }
-
-            $formattedDateTime = $ago->format('F j - H:i');
-
-            if (!$full) $string = array_slice($string, 0, 1);
-            return $formattedDateTime;
-        }
-
     }
 }
